@@ -1,0 +1,13 @@
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/node_modules
+**/.next
+**/.env
+.git
+backend/tests
+backend/evals
+backend/training
+samples
+docs

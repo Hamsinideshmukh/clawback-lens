@@ -1,0 +1,29 @@
+# Render Blueprint: API (Docker) + managed PostgreSQL.
+# The service does not auto-deploy on push; .github/workflows/deploy.yml
+# triggers a deploy through a deploy hook only after CI passes on main.
+services:
+  - type: web
+    name: clawback-lens-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    autoDeploy: false
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: clawback-lens-db
+          property: connectionString
+      - key: WORKER_EMBEDDED  # single free instance: run the job worker in-process
+        value: "true"
+      - key: CORS_ORIGINS  # JSON list, e.g. ["https://clawback.vercel.app"]
+        sync: false
+      - key: LLM_API_KEY  # optional; leave unset to run on local models only
+        sync: false
+
+databases:
+  - name: clawback-lens-db
+    plan: free
+    databaseName: clawback
+    user: clawback

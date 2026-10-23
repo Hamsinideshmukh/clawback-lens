@@ -1,0 +1,75 @@
+# Full local stack:  docker compose up --build
+# With metrics:      docker compose --profile observability up --build
+name: clawback
+
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: backend/Dockerfile
+  image: clawback-lens-api:local
+  environment:
+    DATABASE_URL: postgresql+psycopg://clawback:clawback@db:5432/clawback
+    CORS_ORIGINS: '["http://localhost:3000"]'
+    WORKER_EMBEDDED: "false"
+    LLM_API_KEY: ${LLM_API_KEY:-}
+    LLM_BASE_URL: ${LLM_BASE_URL:-https://router.huggingface.co/v1}
+    LLM_MODEL: ${LLM_MODEL:-Qwen/Qwen2.5-7B-Instruct}
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: clawback
+      POSTGRES_PASSWORD: clawback
+      POSTGRES_DB: clawback
+    ports:
+      - "5432:5432"  # local development and tests connect from the host
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./ops/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clawback"]
+      interval: 5s
+      retries: 10
+
+  api:
+    <<: *backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Workers scale horizontally: jobs are claimed with FOR UPDATE SKIP LOCKED.
+  worker:
+    <<: *backend
+    command: ["python", "-m", "app.workflow.worker"]
+    deploy:
+      replicas: 2
+    healthcheck:
+      disable: true
+    depends_on:
+      api:
+        condition: service_healthy  # the API container applies migrations
+
+  web:
+    build:
+      context: frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    image: clawback-lens-web:local
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    profiles: ["observability"]
+    volumes:
+      - ./ops/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+volumes:
+  pgdata:
