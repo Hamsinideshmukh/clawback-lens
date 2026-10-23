@@ -106,14 +106,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: backend/Dockerfile
           tags: clawback-lens-api:ci
           cache-from: type=gha,scope=api
           cache-to: type=gha,mode=max,scope=api
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: frontend
           tags: clawback-lens-web:ci
