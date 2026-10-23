@@ -111,7 +111,7 @@ Clawback Lens grows out of what was built for the dispute-resolution track of
 American Express CodeStreet 2026.Thanks to American Express and the CodeStreet organisers for the problem
 statement.
 
-Gratitute also to the open-source projects the vision pipeline stands on: [OpenCV](https://opencv.org)
+Gratitude also to the open-source projects the vision pipeline stands on: [OpenCV](https://opencv.org)
 for image processing, [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) for the PP-OCR models,
 and [RapidOCR](https://github.com/RapidAI/RapidOCR) and [ONNX Runtime](https://onnxruntime.ai) for
 running them.
