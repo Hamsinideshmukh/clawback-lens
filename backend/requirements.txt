@@ -1,0 +1,143 @@
+alembic==1.20.0
+    # via clawback-lens-backend (pyproject.toml)
+annotated-doc==0.0.5
+    # via fastapi
+annotated-types==0.8.0
+    # via pydantic
+anyio==4.15.1
+    # via
+    #   httpx
+    #   starlette
+    #   watchfiles
+certifi==2026.10.19
+    # via
+    #   httpcore
+    #   httpx
+    #   requests
+charset-normalizer==3.5.2
+    # via requests
+click==8.5.0
+    # via uvicorn
+colorlog==6.12.0
+    # via rapidocr
+fastapi==0.157.0
+    # via clawback-lens-backend (pyproject.toml)
+flatbuffers==25.12.19
+    # via onnxruntime
+h11==0.16.0
+    # via
+    #   httpcore
+    #   uvicorn
+httpcore==1.0.9
+    # via httpx
+httptools==0.9.0
+    # via uvicorn
+httpx==0.28.1
+    # via clawback-lens-backend (pyproject.toml)
+idna==3.20
+    # via
+    #   anyio
+    #   httpx
+    #   requests
+mako==1.4.3
+    # via alembic
+markupsafe==3.0.4
+    # via mako
+numpy==2.5.4
+    # via
+    #   clawback-lens-backend (pyproject.toml)
+    #   onnxruntime
+    #   opencv-python-headless
+    #   rapidocr
+    #   shapely
+omegaconf==2.4.0
+    # via rapidocr
+onnxruntime==1.31.0
+    # via clawback-lens-backend (pyproject.toml)
+opencv-python-headless==5.0.0.93
+    # via
+    #   clawback-lens-backend (pyproject.toml)
+    #   rapidocr
+opentelemetry-api==1.45.1
+    # via fastapi
+packaging==26.3
+    # via onnxruntime
+pillow==13.0.0
+    # via rapidocr
+prometheus-client==0.26.0
+    # via clawback-lens-backend (pyproject.toml)
+protobuf==7.36.2
+    # via onnxruntime
+psycopg==3.3.6
+    # via clawback-lens-backend (pyproject.toml)
+psycopg-binary==3.3.6
+    # via psycopg
+pyclipper==1.4.0
+    # via rapidocr
+pydantic==2.14.1
+    # via
+    #   fastapi
+    #   pydantic-settings
+pydantic-core==2.50.1
+    # via pydantic
+pydantic-settings==2.16.1
+    # via clawback-lens-backend (pyproject.toml)
+pypdfium2==5.14.0
+    # via clawback-lens-backend (pyproject.toml)
+python-dotenv==1.2.4
+    # via
+    #   pydantic-settings
+    #   uvicorn
+python-multipart==0.0.32
+    # via clawback-lens-backend (pyproject.toml)
+pyyaml==6.0.3
+    # via
+    #   omegaconf
+    #   rapidocr
+    #   uvicorn
+rapidfuzz==3.14.6
+    # via clawback-lens-backend (pyproject.toml)
+rapidocr==3.10.0
+    # via clawback-lens-backend (pyproject.toml)
+requests==2.34.2
+    # via rapidocr
+shapely==2.2.0
+    # via rapidocr
+six==1.17.0
+    # via rapidocr
+sqlalchemy==2.1.6
+    # via
+    #   clawback-lens-backend (pyproject.toml)
+    #   alembic
+starlette==1.9.0
+    # via fastapi
+tqdm==4.70.1
+    # via rapidocr
+typing-extensions==4.16.0
+    # via
+    #   alembic
+    #   anyio
+    #   fastapi
+    #   opentelemetry-api
+    #   psycopg
+    #   pydantic
+    #   pydantic-core
+    #   pydantic-settings
+    #   sqlalchemy
+    #   starlette
+    #   typing-inspection
+typing-inspection==0.4.4
+    # via
+    #   fastapi
+    #   pydantic
+    #   pydantic-settings
+urllib3==2.8.0
+    # via requests
+uvicorn==0.54.0
+    # via clawback-lens-backend (pyproject.toml)
+uvloop==0.23.0
+    # via uvicorn
+watchfiles==1.3.0
+    # via uvicorn
+websockets==17.3
+    # via uvicorn
