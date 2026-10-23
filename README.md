@@ -35,8 +35,7 @@ flowchart LR
 by projection-profile deskew, and read with PP-OCR on ONNX Runtime. A signature detector looks for
 handwriting the OCR did not read as text, and QR and barcode decoders run on several views of the
 page. The binarization kernel is written in C++ (pybind11), since it runs on every pixel. OCR was chosen
-after measuring it against Tesseract on degraded scans: 2.4% character error versus 44.6%
-([survey](docs/ocr-survey.md)).
+after measuring it against Tesseract on degraded scans: 2.4% character error versus 44.6%.
 
 **Evidence.** Two small classifiers, trained here and exported to ONNX, identify the document type and
 the sentences that count as evidence. Signatures and decoded codes corroborate them. An
