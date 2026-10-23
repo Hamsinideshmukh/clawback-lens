@@ -1,0 +1,99 @@
+name: Deploy
+
+# Continuous delivery: runs only after CI succeeds on main, so nothing reaches
+# production without passing tests, type checks, model gates and the eval.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  image:
+    name: Publish API image to GHCR
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      sha: ${{ steps.vars.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - id: vars  # image names must be lowercase; GitHub usernames may not be
+        run: |
+          echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/clawback-lens-api" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.vars.outputs.image }}:${{ steps.vars.outputs.sha }}
+            ${{ steps.vars.outputs.image }}:latest
+          cache-from: type=gha,scope=api
+
+  backend:
+    name: Deploy API (Render)
+    needs: image
+    runs-on: ubuntu-latest
+    environment:
+      name: production-api
+      url: ${{ vars.API_URL }}
+    steps:
+      - name: Trigger Render deploy
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "::warning::RENDER_DEPLOY_HOOK_URL not set; skipping"; exit 0; fi
+          curl -fsS -X POST "$HOOK"
+      - name: Wait for the new release to report ready
+        if: vars.API_URL != ''
+        run: |
+          for i in $(seq 1 40); do
+            if curl -fsS "${{ vars.API_URL }}/health/ready"; then exit 0; fi
+            sleep 15
+          done
+          echo "::error::API did not become ready"; exit 1
+
+  frontend:
+    name: Deploy web (Vercel)
+    needs: backend
+    runs-on: ubuntu-latest
+    environment:
+      name: production-web
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Run from the repository root; the Vercel project's Root Directory is "frontend".
+      - id: deploy
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then echo "::warning::Vercel secrets not set; skipping"; exit 0; fi
+          npx vercel@39 pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx vercel@39 build --prod --token="$VERCEL_TOKEN"
+          url=$(npx vercel@39 deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          curl -fsS -o /dev/null "$url"

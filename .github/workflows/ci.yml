@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  backend:
+    name: Backend · lint, types, tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: clawback
+          POSTGRES_PASSWORD: clawback
+          POSTGRES_DB: clawback_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U clawback" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://clawback:clawback@localhost:5432/clawback_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - name: Install dependencies and build the C++ extension
+        run: pip install -r requirements-dev.txt ../native
+      - name: Lint
+        run: ruff check . && ruff format --check .
+      - name: Type-check
+        run: mypy app
+      - name: Migrations match models
+        run: alembic upgrade head && alembic check
+      - name: Tests
+        run: pytest --cov --cov-report=term-missing:skip-covered --cov-report=xml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: backend/coverage.xml
+
+  ml-quality:
+    name: ML · reproducible training and document AI eval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt ../native
+      - name: Committed ONNX models are reproducible from source and pass their gates
+        run: python -m training.train --check
+      - name: End-to-end evaluation on degraded synthetic scans
+        run: python -m evals.run_eval --per-type 10 --out eval-report
+      - name: Publish report
+        if: always()
+        run: cat eval-report/report.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-report
+          path: backend/eval-report
+
+  frontend:
+    name: Frontend · lint, types, tests, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  docker:
+    name: Docker · build images
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          tags: clawback-lens-api:ci
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+      - uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          tags: clawback-lens-web:ci
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
