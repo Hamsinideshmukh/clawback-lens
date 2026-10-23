@@ -1,0 +1,104 @@
+{
+  "version": "2026.10.21",
+  "seed": 20261021,
+  "gates": {
+    "evidence": {
+      "macro_f1": 0.8
+    },
+    "doc_type": {
+      "accuracy": 0.95
+    }
+  },
+  "models": {
+    "evidence": {
+      "file": "evidence.onnx",
+      "sha256": "c8015430e8ccb92b355f722a5ece153bf6ea87246530953ce7cc685aabb8c9b3",
+      "labels": [
+        "authorisation_within_seven_days",
+        "boarding_pass_scan",
+        "cancellation_policy_provided",
+        "chargeback_raised_in_error",
+        "correcting_transaction_processed",
+        "delivery_address_match",
+        "description_match_proof",
+        "email_delivery_match",
+        "ip_address_match",
+        "loyalty_point_credit_proof",
+        "none",
+        "other_payment_unrelated",
+        "post_purchase_access_log",
+        "presentment_within_timeframe",
+        "repair_or_replacement_offered",
+        "return_refuted",
+        "signed_delivery",
+        "substitute_goods_accepted",
+        "transaction_within_card_validity",
+        "transactions_linked_to_card_member",
+        "valid_authorisation_proof"
+      ],
+      "algorithm": "tf-idf (stemmed unigrams) + logistic regression",
+      "hyperparameters": {
+        "C": 8.0
+      },
+      "samples": 3900,
+      "evaluation": "4-fold cross-validation grouped by template (unseen phrasings)",
+      "metrics": {
+        "accuracy": 0.8177,
+        "macro_f1": 0.83,
+        "per_class_f1": {
+          "authorisation_within_seven_days": 0.766,
+          "boarding_pass_scan": 0.8399,
+          "cancellation_policy_provided": 0.8571,
+          "chargeback_raised_in_error": 0.6,
+          "correcting_transaction_processed": 0.6087,
+          "delivery_address_match": 0.9412,
+          "description_match_proof": 0.9167,
+          "email_delivery_match": 0.9067,
+          "ip_address_match": 0.9362,
+          "loyalty_point_credit_proof": 0.8858,
+          "none": 0.7388,
+          "other_payment_unrelated": 0.7826,
+          "post_purchase_access_log": 0.7368,
+          "presentment_within_timeframe": 0.8333,
+          "repair_or_replacement_offered": 0.9167,
+          "return_refuted": 0.9697,
+          "signed_delivery": 0.844,
+          "substitute_goods_accepted": 0.9565,
+          "transaction_within_card_validity": 0.9231,
+          "transactions_linked_to_card_member": 0.6364,
+          "valid_authorisation_proof": 0.8333
+        }
+      }
+    },
+    "doc_type": {
+      "file": "doc_type.onnx",
+      "sha256": "e4b26c98fe7d88bb177680d64214a5eb5494cb180171332cea684dc36acbba6d",
+      "labels": [
+        "boarding_pass",
+        "correspondence",
+        "delivery_receipt",
+        "digital_access_log",
+        "invoice",
+        "refund_confirmation"
+      ],
+      "algorithm": "tf-idf (stemmed unigrams) + logistic regression",
+      "hyperparameters": {
+        "C": 2.0
+      },
+      "samples": 1200,
+      "evaluation": "4-fold cross-validation grouped by template (unseen phrasings)",
+      "metrics": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "per_class_f1": {
+          "boarding_pass": 1.0,
+          "correspondence": 1.0,
+          "delivery_receipt": 1.0,
+          "digital_access_log": 1.0,
+          "invoice": 1.0,
+          "refund_confirmation": 1.0
+        }
+      }
+    }
+  }
+}
