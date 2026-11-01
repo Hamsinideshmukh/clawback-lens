@@ -2,12 +2,12 @@
 
 # ---- Build the C++ image kernel into a wheel -------------------------------
 # The full image ships a C++ toolchain; scikit-build-core fetches CMake from PyPI.
-FROM python:3.12 AS native
+FROM python:3.15 AS native
 COPY native /src/native
 RUN pip wheel --no-cache-dir /src/native -w /wheels
 
 # ---- Runtime ----------------------------------------------------------------
-FROM python:3.12-slim AS runtime
+FROM python:3.15-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
